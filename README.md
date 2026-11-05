@@ -14,6 +14,26 @@ PerformanceOverlay loads trusted .NET plugins that implement `IOverlayPlugin` fr
 - Return a WPF `FrameworkElement` from `CreateView()`. Keep it compact and vertically centered so it fits the horizontal overlay.
 - Stop timers, event handlers, and other resources in `Dispose()`.
 
+### Project file
+
+For a plugin folder that contains a copy of `PluginApi`, use a project file like this:
+
+```xml
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="PluginApi\PerformanceOverlay.PluginApi.csproj" Private="false" />
+  </ItemGroup>
+</Project>
+```
+
+`Private="false"` keeps the API assembly out of the plugin's output; PerformanceOverlay provides the shared API when it loads a plugin.
+
 ### Minimal plugin
 
 ```csharp
