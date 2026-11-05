@@ -4,7 +4,7 @@ Adds the local time in 24-hour format to the PerformanceOverlay. The `TIME` labe
 
 ## Install
 
-1. Download `ClockPlugin.dll` from this folder or from the plugin's GitHub release.
+1. Download `ClockPlugin.dll` from this folder. A GitHub release can be added later if a tagged package is needed.
 2. In PerformanceOverlay's system tray menu, choose **Plugins → Load plugin…**.
 3. Select `ClockPlugin.dll` and confirm the trust prompt.
 
