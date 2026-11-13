@@ -77,8 +77,9 @@ The app copies the selected assembly and nearby `.dll`, `.json`, and `.config` d
 
 ## Security
 
-Plugins run inside PerformanceOverlay with the same permissions as the app, which currently runs with administrator privileges. Only load plugins whose source you trust.
+Plugins run inside PerformanceOverlay with the same permissions as the app. Only load plugins whose source you trust.
 
 ## Official plugins
 
 - [Clock](clock/README.md) — adds the local time in 24-hour format.
+- [Customizable Overlay](customizable-overlay/README.md) — configures metric visibility and order, accent color, scale, monitor, and hover fade.
