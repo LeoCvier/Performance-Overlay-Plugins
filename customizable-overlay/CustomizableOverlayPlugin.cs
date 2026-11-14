@@ -261,7 +261,7 @@ public sealed class CustomizableOverlayPlugin : IOverlayPlugin, IOverlayPluginSe
     {
         if (_pluginMenu is null) return;
         _pluginMenu.DropDownItems.Add(new Forms.ToolStripSeparator());
-        var configure = new Forms.ToolStripMenuItem("Configure Customizable Overlay…") { Enabled = _active };
+        var configure = new Forms.ToolStripMenuItem(PluginText.Get(GetUiLanguage(), "Configure Customizable Overlay…")) { Enabled = _active };
         configure.Click += (_, _) => OpenSettings();
         _pluginMenu.DropDownItems.Add(configure);
     }
@@ -282,9 +282,19 @@ public sealed class CustomizableOverlayPlugin : IOverlayPlugin, IOverlayPluginSe
             ApplyMetricSelection();
             ApplySavedPosition();
             UpdateHoverTransparency();
-        }) { Owner = owner };
+        }, GetUiLanguage(owner)) { Owner = owner };
         _settingsWindow.Closed += (_, _) => _settingsWindow = null;
         _settingsWindow.Show();
+    }
+
+    private string GetUiLanguage(WpfWindow? owner = null)
+    {
+        for (WpfWindow? window = owner ?? _host; window is not null; window = window.Owner)
+        {
+            var language = window.GetType().GetField("_uiLanguage", BindingFlags.Instance | BindingFlags.NonPublic)?.GetValue(window) as string;
+            if (language is "English" or "German") return language;
+        }
+        return "English";
     }
 
     private void ApplySavedPosition()
@@ -411,32 +421,59 @@ public sealed class CustomizableOverlayPlugin : IOverlayPlugin, IOverlayPluginSe
         }
     }
 
+    private static class PluginText
+    {
+        private static readonly IReadOnlyDictionary<string, string> German = new Dictionary<string, string>
+        {
+            ["Configure Customizable Overlay…"] = "Customizable Overlay konfigurieren…",
+            ["Customizable Overlay"] = "Anpassbares Overlay",
+            ["Overlay settings"] = "Overlay-Einstellungen",
+            ["Overlay size"] = "Overlay-Größe",
+            ["Scale"] = "Skalierung",
+            ["Hover transparency (100% hides the overlay)"] = "Transparenz bei Mausnähe (100 % blendet das Overlay aus)",
+            ["Fade %"] = "Ausblenden %",
+            ["Hover starts within this distance of the overlay"] = "Mausnähe beginnt innerhalb dieses Abstands zum Overlay",
+            ["Radius px"] = "Radius px",
+            ["Display"] = "Anzeigen",
+            ["Monitor"] = "Bildschirm",
+            ["Primary"] = "Primärbildschirm",
+            ["Screen"] = "Bildschirm",
+            ["The overlay remains click-through and keeps its original style. Hover fading changes only when the pointer enters the configured distance. Placement follows the host's corner setting on the selected monitor."] = "Das Overlay bleibt durchklickbar und behält seinen Stil. Das Ausblenden bei Mausnähe greift erst innerhalb des eingestellten Abstands. Die Position folgt der Eckenauswahl des Hauptprogramms auf dem ausgewählten Bildschirm."
+        };
+
+        public static string Get(string language, string text) =>
+            language.Equals("German", StringComparison.OrdinalIgnoreCase) && German.TryGetValue(text, out var translated)
+                ? translated
+                : text;
+    }
+
     private sealed class SettingsWindow : WpfWindow
     {
         private readonly Settings _settings;
         private readonly Action _changed;
+        private readonly string _language;
         private readonly StackPanel _metricRows = new();
         private readonly Border _colorPreview = new() { Width = 30, Height = 20, CornerRadius = new CornerRadius(4), Margin = new Thickness(8, 0, 0, 0) };
         private readonly HueWheel _wheel = new() { Width = 160, Height = 160, Margin = new Thickness(0, 8, 0, 8) };
-        public SettingsWindow(Settings settings, Action changed)
+        public SettingsWindow(Settings settings, Action changed, string language)
         {
-            _settings = settings; _changed = changed;
-            Title = "Customizable Overlay"; Width = 420; Height = 680; ResizeMode = ResizeMode.CanResize; WindowStartupLocation = WindowStartupLocation.CenterScreen;
+            _settings = settings; _changed = changed; _language = language;
+            Title = L("Customizable Overlay"); Width = 420; Height = 680; ResizeMode = ResizeMode.CanResize; WindowStartupLocation = WindowStartupLocation.CenterScreen;
             Background = new SolidColorBrush(WpfColor.FromRgb(29, 33, 41)); Foreground = Brushes.White;
             var root = new StackPanel { Margin = new Thickness(18) };
             Content = new ScrollViewer { Content = root, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
-            root.Children.Add(new TextBlock { Text = "Overlay settings", FontSize = 20, FontWeight = FontWeights.Bold, Foreground = Brushes.White, Margin = new Thickness(0, 0, 0, 12) });
+            root.Children.Add(new TextBlock { Text = L("Overlay settings"), FontSize = 20, FontWeight = FontWeights.Bold, Foreground = Brushes.White, Margin = new Thickness(0, 0, 0, 12) });
             var colorRow = new StackPanel { Orientation = Orientation.Horizontal };
             colorRow.Children.Add(_wheel); colorRow.Children.Add(_colorPreview); root.Children.Add(colorRow);
             _wheel.ColorChanged += c => { _settings.Color = c.ToString(); _colorPreview.Background = new SolidColorBrush(c); _changed(); };
             _wheel.SetColor(_settings.Accent); _colorPreview.Background = new SolidColorBrush(_settings.Accent);
-            root.Children.Add(new TextBlock { Text = "Overlay size", Foreground = Brushes.White });
-            AddSlider(root, .65, 2.2, _settings.Scale, v => _settings.Scale = v, "Scale");
-            root.Children.Add(new TextBlock { Text = "Hover transparency (100% hides the overlay)", Foreground = Brushes.White, Margin = new Thickness(0, 10, 0, 0) });
-            AddSlider(root, 0, 100, _settings.HoverTransparency, v => _settings.HoverTransparency = v, "Fade %");
-            root.Children.Add(new TextBlock { Text = "Hover starts within this distance of the overlay", Foreground = Brushes.White, Margin = new Thickness(0, 10, 0, 0) });
-            AddSlider(root, 0, 500, _settings.HoverRadius, v => _settings.HoverRadius = v, "Radius px");
-            root.Children.Add(new TextBlock { Text = "Display", Foreground = Brushes.White, FontSize = 16, Margin = new Thickness(0, 12, 0, 6) });
+            root.Children.Add(new TextBlock { Text = L("Overlay size"), Foreground = Brushes.White });
+            AddSlider(root, .65, 2.2, _settings.Scale, v => _settings.Scale = v, L("Scale"));
+            root.Children.Add(new TextBlock { Text = L("Hover transparency (100% hides the overlay)"), Foreground = Brushes.White, Margin = new Thickness(0, 10, 0, 0) });
+            AddSlider(root, 0, 100, _settings.HoverTransparency, v => _settings.HoverTransparency = v, L("Fade %"));
+            root.Children.Add(new TextBlock { Text = L("Hover starts within this distance of the overlay"), Foreground = Brushes.White, Margin = new Thickness(0, 10, 0, 0) });
+            AddSlider(root, 0, 500, _settings.HoverRadius, v => _settings.HoverRadius = v, L("Radius px"));
+            root.Children.Add(new TextBlock { Text = L("Display"), Foreground = Brushes.White, FontSize = 16, Margin = new Thickness(0, 12, 0, 6) });
             foreach (var key in MetricKeys)
             {
                 var row = new DockPanel { Margin = new Thickness(0, 2, 0, 2) };
@@ -450,13 +487,14 @@ public sealed class CustomizableOverlayPlugin : IOverlayPlugin, IOverlayPluginSe
                 DockPanel.SetDock(down, Dock.Right); DockPanel.SetDock(up, Dock.Right); row.Children.Add(down); row.Children.Add(up); _metricRows.Children.Add(row);
             }
             root.Children.Add(_metricRows);
-            root.Children.Add(new TextBlock { Text = "Monitor", Foreground = Brushes.White, FontSize = 16, Margin = new Thickness(0, 12, 0, 4) });
+            root.Children.Add(new TextBlock { Text = L("Monitor"), Foreground = Brushes.White, FontSize = 16, Margin = new Thickness(0, 12, 0, 4) });
             var screens = Forms.Screen.AllScreens;
-            var combo = new ComboBox { ItemsSource = screens.Select((s, i) => new ScreenEntry(s, i)).ToList(), DisplayMemberPath = nameof(ScreenEntry.Label), SelectedValuePath = nameof(ScreenEntry.DeviceName), SelectedValue = _settings.Screen };
+            var combo = new ComboBox { ItemsSource = screens.Select((s, i) => new ScreenEntry(s, i, _language)).ToList(), DisplayMemberPath = nameof(ScreenEntry.Label), SelectedValuePath = nameof(ScreenEntry.DeviceName), SelectedValue = _settings.Screen };
             combo.SelectionChanged += (_, _) => { if (combo.SelectedValue is string device) _settings.Screen = device; _changed(); };
             root.Children.Add(combo);
-            root.Children.Add(new TextBlock { Text = "The overlay remains click-through and keeps its original style. Hover fading changes only when the pointer enters the configured distance. Placement follows the host's corner setting on the selected monitor.", Foreground = new SolidColorBrush(WpfColor.FromRgb(180, 185, 195)), TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 16, 0, 0) });
+            root.Children.Add(new TextBlock { Text = L("The overlay remains click-through and keeps its original style. Hover fading changes only when the pointer enters the configured distance. Placement follows the host's corner setting on the selected monitor."), Foreground = new SolidColorBrush(WpfColor.FromRgb(180, 185, 195)), TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 16, 0, 0) });
         }
+        private string L(string text) => PluginText.Get(_language, text);
         private void AddSlider(System.Windows.Controls.Panel parent, double min, double max, double value, Action<double> setter, string label)
         {
             var row = new StackPanel { Orientation = Orientation.Horizontal };
@@ -473,13 +511,13 @@ public sealed class CustomizableOverlayPlugin : IOverlayPlugin, IOverlayPluginSe
             if (index < 0 || next < 0 || next >= _settings.Order.Count) return;
             (_settings.Order[index], _settings.Order[next]) = (_settings.Order[next], _settings.Order[index]);
             _changed();
-            var replacement = new SettingsWindow(_settings, _changed) { Owner = this };
+            var replacement = new SettingsWindow(_settings, _changed, _language) { Owner = this };
             replacement.Show(); Close();
         }
-        private sealed record ScreenEntry(Forms.Screen Screen, int Index)
+        private sealed record ScreenEntry(Forms.Screen Screen, int Index, string Language)
         {
             public string DeviceName => Screen.DeviceName;
-            public string Label => $"{(Screen.Primary ? "Primary" : "Screen")} {Index + 1} ({Screen.Bounds.Width}×{Screen.Bounds.Height})";
+            public string Label => $"{PluginText.Get(Language, Screen.Primary ? "Primary" : "Screen")} {Index + 1} ({Screen.Bounds.Width}×{Screen.Bounds.Height})";
         }
     }
 
