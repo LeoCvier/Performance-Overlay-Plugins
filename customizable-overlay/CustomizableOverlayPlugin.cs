@@ -20,7 +20,7 @@ using WpfWindow = System.Windows.Window;
 
 namespace PerformanceOverlay.CustomizableOverlay;
 
-public sealed class CustomizableOverlayPlugin : IOverlayPlugin, IOverlayMetricVisibilityFilter, IOverlayPlacementProvider
+public sealed class CustomizableOverlayPlugin : IOverlayPlugin, IOverlayPluginSettings, IOverlayMetricVisibilityFilter, IOverlayPlacementProvider
 {
     private static readonly string[] MetricKeys = ["FPS AVG", "FPS MAX", "FPS MIN", "CPU", "CPU TEMP", "RAM", "GPU", "GPU TEMP"];
     private static readonly Dictionary<string, string> ElementNames = new()
@@ -268,6 +268,11 @@ public sealed class CustomizableOverlayPlugin : IOverlayPlugin, IOverlayMetricVi
 
     private void OpenSettings()
     {
+        if (_host is not null) OpenSettings(_host);
+    }
+
+    public void OpenSettings(WpfWindow owner)
+    {
         if (!_active) return;
         if (_settingsWindow is { IsVisible: true }) { _settingsWindow.Activate(); return; }
         _settingsWindow = new SettingsWindow(_settings, () =>
@@ -277,7 +282,7 @@ public sealed class CustomizableOverlayPlugin : IOverlayPlugin, IOverlayMetricVi
             ApplyMetricSelection();
             ApplySavedPosition();
             UpdateHoverTransparency();
-        });
+        }) { Owner = owner };
         _settingsWindow.Closed += (_, _) => _settingsWindow = null;
         _settingsWindow.Show();
     }

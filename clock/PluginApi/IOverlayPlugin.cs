@@ -21,3 +21,8 @@ public interface IOverlayPlugin : IDisposable
     /// </summary>
     FrameworkElement CreateView();
 }
+
+public interface IOverlayPluginSettings
+{
+    void OpenSettings(Window owner);
+}
