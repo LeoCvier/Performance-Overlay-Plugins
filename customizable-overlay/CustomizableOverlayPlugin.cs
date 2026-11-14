@@ -441,10 +441,38 @@ public sealed class CustomizableOverlayPlugin : IOverlayPlugin, IOverlayPluginSe
             ["The overlay remains click-through and keeps its original style. Hover fading changes only when the pointer enters the configured distance. Placement follows the host's corner setting on the selected monitor."] = "Das Overlay bleibt durchklickbar und behält seinen Stil. Das Ausblenden bei Mausnähe greift erst innerhalb des eingestellten Abstands. Die Position folgt der Eckenauswahl des Hauptprogramms auf dem ausgewählten Bildschirm."
         };
 
-        public static string Get(string language, string text) =>
-            language.Equals("German", StringComparison.OrdinalIgnoreCase) && German.TryGetValue(text, out var translated)
-                ? translated
-                : text;
+        private static readonly IReadOnlyDictionary<string, string> French = new Dictionary<string, string>
+        {
+            ["Configure Customizable Overlay…"] = "Configurer Customizable Overlay…", ["Customizable Overlay"] = "Overlay personnalisable", ["Overlay settings"] = "Paramètres de l’overlay",
+            ["Overlay size"] = "Taille de l’overlay", ["Scale"] = "Échelle", ["Hover transparency (100% hides the overlay)"] = "Transparence au survol (100 % masque l’overlay)",
+            ["Fade %"] = "Opacité %", ["Hover starts within this distance of the overlay"] = "Le survol commence à cette distance de l’overlay", ["Radius px"] = "Rayon px",
+            ["Display"] = "Affichage", ["Monitor"] = "Écran", ["Primary"] = "Principal", ["Screen"] = "Écran",
+            ["The overlay remains click-through and keeps its original style. Hover fading changes only when the pointer enters the configured distance. Placement follows the host's corner setting on the selected monitor."] = "L’overlay reste traversable au clic et conserve son style. Le fondu au survol s’active uniquement dans la distance définie. La position suit le coin choisi dans l’application hôte sur l’écran sélectionné."
+        };
+
+        private static readonly IReadOnlyDictionary<string, string> Japanese = new Dictionary<string, string>
+        {
+            ["Configure Customizable Overlay…"] = "カスタマイズ可能なオーバーレイを設定…", ["Customizable Overlay"] = "カスタマイズ可能なオーバーレイ", ["Overlay settings"] = "オーバーレイ設定",
+            ["Overlay size"] = "オーバーレイのサイズ", ["Scale"] = "倍率", ["Hover transparency (100% hides the overlay)"] = "マウス付近の透明度（100%で非表示）",
+            ["Fade %"] = "フェード %", ["Hover starts within this distance of the overlay"] = "この距離内にマウスが入ると反応", ["Radius px"] = "半径 px",
+            ["Display"] = "表示項目", ["Monitor"] = "モニター", ["Primary"] = "メイン", ["Screen"] = "画面",
+            ["The overlay remains click-through and keeps its original style. Hover fading changes only when the pointer enters the configured distance. Placement follows the host's corner setting on the selected monitor."] = "オーバーレイはクリックを透過し、元のスタイルを維持します。設定した距離内にポインターが入るとフェードします。位置は選択したモニター上でホストの角設定に従います。"
+        };
+
+        private static readonly IReadOnlyDictionary<string, string> Chinese = new Dictionary<string, string>
+        {
+            ["Configure Customizable Overlay…"] = "配置可自定义覆盖层…", ["Customizable Overlay"] = "可自定义覆盖层", ["Overlay settings"] = "覆盖层设置",
+            ["Overlay size"] = "覆盖层大小", ["Scale"] = "缩放", ["Hover transparency (100% hides the overlay)"] = "鼠标悬停透明度（100% 时隐藏覆盖层）",
+            ["Fade %"] = "淡出 %", ["Hover starts within this distance of the overlay"] = "鼠标进入此距离时触发悬停效果", ["Radius px"] = "半径 px",
+            ["Display"] = "显示项目", ["Monitor"] = "显示器", ["Primary"] = "主显示器", ["Screen"] = "屏幕",
+            ["The overlay remains click-through and keeps its original style. Hover fading changes only when the pointer enters the configured distance. Placement follows the host's corner setting on the selected monitor."] = "覆盖层仍可穿透点击并保持原有样式。指针进入设定距离后才会淡出。覆盖层会在选定显示器上跟随主程序的角落位置设置。"
+        };
+
+        public static string Get(string language, string text)
+        {
+            var translations = language switch { "German" => German, "French" => French, "Japanese" => Japanese, "Chinese" => Chinese, _ => null };
+            return translations is not null && translations.TryGetValue(text, out var translated) ? translated : text;
+        }
     }
 
     private sealed class SettingsWindow : WpfWindow
